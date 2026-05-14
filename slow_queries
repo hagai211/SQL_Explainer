@@ -1,0 +1,44 @@
+--example for query that its taking too long because the size of the table --no filter is used
+SELECT *
+FROM Call_Log WITH(NOLOCK)
+ORDER BY 1 DESC
+
+--Example for quesy that failed fast becuse other query is holding the table
+SELECT *
+FROM Call_Log
+where device_id = 12345
+ORDER BY 1 DESC
+
+--Example for query that failed because of ambiguous column:
+select device_id
+from Call_Log cl join devices device_id
+  on d.device_id = cl.device_id
+where d.device_number = '12345_q'
+order by Call_ID DESC
+
+--Example for query that is taking too long becasue the DB need to parse a string
+select *
+from action_log_view
+where messege like '%Error%'
+
+--Examples for a query that takes too long becasue the DB needs to order by date/string and not int(numbers)
+SELECT *
+FROM Call_Log
+where device_id = 12345
+ORDER BY Created_On DESC
+
+SELECT *
+FROM Offenders
+order by First_Name DESC
+
+
+--Example for query that failed becuase column 'X' must appear in the GROUP BY clause or be used in an aggregate function"
+SELECT department, employee_name, COUNT(*)
+FROM employees
+GROUP BY department;
+
+--query can take too long if he lacks indexes
+
+-- Bad joins
+--Joining large tables without proper indexes on the join keys, accidental cross joins (missing ON condition), or joining more tables than needed. Each extra join multiplies the work.
+

@@ -1,0 +1,67 @@
+Missing WHERE clause (full scan)
+Locking / blocking (other queries holding tables)
+Query errors (ambiguous columns, missing GROUP BY)
+String operations (LIKE '%...%' — the classic non-sargable pattern)
+Sorting on non-indexed columns (ORDER BY date/string vs int)
+Missing indexes
+Bad joins (cross joins, missing ON, too many joins)
+
+These are literally the 7 most common categories any SQL performance tool needs to detect. You scoped the MVP for me without realizing it.
+
+
+The big-picture plan (just so you see where we're going):
+
+Week 1 — Collect real queries, build a basic Python parser that detects simple patterns (SELECT *, missing WHERE clauses, obvious index issues)
+Week 2 — Read execution plans (XML format) and extract structured info
+Week 3 — Build the "explainer" — translate technical problems into human language
+Week 4 — Simple CLI, Dockerfile, README, clean GitHub repo → this is already a portfolio-grade MVP
+
+Bonus observation — the "ambiguous column" example:
+That's actually not a performance issue, it's a correctness issue (query fails). This is interesting — it tells me the tool could have two modes:
+
+"Why is this slow?" (performance)
+"Why is this failing?" (correctness / errors)
+
+We'll come back to that. For now, performance is the focus.
+
+
+Step 1:
+Open a text file called slow_queries.sql and write down 5 queries you remember being slow (or made-up ones if you don't have access). For each one, add a comment with:
+
+Roughly how long it took
+Your suspicion about why it was slow (if any)
+
+
+Step 2:
+Next time you sit down, we'll build the simplest possible version of the tool:
+A Python script called explain.py that:
+
+Takes a SQL query as input (just a string)
+Detects the simplest, most obvious patterns from your list:
+
+SELECT * → warn
+No WHERE clause on big tables → warn
+LIKE '%...%' (leading wildcard) → warn
+No LIMIT/TOP on ordered queries → warn
+
+
+Prints a human-readable explanation
+
+No database connection yet. No execution plans yet. Just text analysis. We'll start there because:
+
+You'll have a working tool in 30 minutes
+It already does something useful
+It builds your confidence to keep going
+
+Example of what tomorrow's tool will output:
+$ python explain.py "SELECT * FROM Call_Log ORDER BY 1 DESC"
+
+⚠️  Found 2 potential issues:
+
+1. SELECT * — returns all columns
+   → Consider listing only the columns you need.
+     This reduces data transfer and can enable index-only scans.
+
+2. No WHERE clause on ORDER BY
+   → Sorting the entire table is expensive.
+     Add a WHERE filter or TOP/LIMIT clause.
