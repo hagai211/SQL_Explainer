@@ -28,7 +28,7 @@ Found 4 potential issue(s):
 ## Run the tests
 
 ```bash
-pytest tests/
+python -m pytest tests/
 ```
 
 ## Project layout
